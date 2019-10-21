@@ -3,11 +3,11 @@
     android:layout_height="match_parent"
     app:behavior_hideable="false"
     android:id="@+id/bottomLayout"
-    android:background="@color/Yellow"
     app:behavior_peekHeight="50dp"
     style="@style/Widget.AppCompat.ProgressBar.Horizontal"
     android:progress="70"
     android:orientation="vertical"
+    android:background="@color/White"
     app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior"
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
@@ -18,7 +18,8 @@
             android:id="@+id/bottomSheet"
             android:layout_width="match_parent"
             android:layout_height="50dp"
-            android:background="@color/PowderBlue"
+            android:background="@drawable/custom_border_bottom_bar"
+
             android:gravity="center"
 
             android:textColor="@android:color/white">
@@ -27,7 +28,7 @@
                 android:layout_height="wrap_content"
                 android:gravity="center"
                 android:text="BottomSheet"
-                android:textColor="@android:color/white" />
+                android:textColor="@android:color/black" />
         </LinearLayout>
 
         <RelativeLayout
@@ -66,7 +67,6 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:gravity="center"
-        android:background="@color/Yellow"
         android:text="Hello"
         android:textColor="@android:color/white" />
 </LinearLayout>

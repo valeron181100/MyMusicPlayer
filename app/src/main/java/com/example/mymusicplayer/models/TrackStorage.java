@@ -1,23 +1,26 @@
 package com.example.mymusicplayer.models;
 
-import android.content.Context;
+import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.AsyncTask;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOError;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import androidx.annotation.Nullable;
 
 public class TrackStorage {
 
@@ -25,12 +28,34 @@ public class TrackStorage {
     private ArrayList<Track> mTracks;
     private ArrayList<OnTracksDownloadedListener> listeners;
     private MediaPlayer mPlayer;
+    private UUID mNowPlaying;
+    private ObservableBoolean mIsPlayerPlaying;
 
     private TrackStorage(){
         mTracks = new ArrayList<>();
         listeners = new ArrayList<>();
         mPlayer = new MediaPlayer();
+        mNowPlaying = null;
+        mIsPlayerPlaying = new ObservableBoolean(false);
+
         loadTracksAsync();
+    }
+
+    public ObservableBoolean getIsPlayerPlaying() {
+        return mIsPlayerPlaying;
+    }
+
+    public void setIsPlayerPlaying(boolean isPlayerPlaying) {
+        mIsPlayerPlaying.setValue(isPlayerPlaying);
+    }
+
+    public UUID getNowPlaying() {
+        return mNowPlaying;
+    }
+
+
+    public void setNowPlaying(UUID nowPlaying) {
+        mNowPlaying = nowPlaying;
     }
 
     public MediaPlayer getPlayer() {
@@ -48,6 +73,14 @@ public class TrackStorage {
         tracksAsyncTask.execute();
     }
 
+    @Nullable
+    public Track getTrackById(UUID id){
+        for(Track p : mTracks){
+            if(p.getID().equals(id)) return p;
+        }
+        return null;
+    }
+
     public int size(){
        return mTracks.size();
     }
@@ -60,7 +93,87 @@ public class TrackStorage {
         listeners.add(listener);
     }
 
-    interface OnTracksDownloadedListener{
+    public void playNext(){
+        getPlayer().reset();
+        mIsPlayerPlaying.setValue(false);
+        getPlayer().setAudioStreamType(AudioManager.STREAM_MUSIC);
+        mNowPlaying = mTracks.get(mTracks.indexOf(getTrackById(mNowPlaying)) + 1).getID();
+        Track t = getTrackById(mNowPlaying);
+        NetHelper.LoadHtmlAsyncTask loadHtmlAsyncTask = new NetHelper.LoadHtmlAsyncTask(getTrackById(mNowPlaying).getLink());
+        loadHtmlAsyncTask.addOnLoadedHtmlListener(new NetHelper.LoadHtmlAsyncTask.OnLoadedHtmlListener() {
+            @Override
+            public void run(final String htmlStr) {
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+
+
+                        Track track = getTrackById(mNowPlaying);
+
+                        try {
+                            getPlayer().setDataSource(new JSONObject(htmlStr).getString("url"));
+                            getPlayer().prepare();
+                        } catch (IOException | JSONException e) {
+                            e.printStackTrace();
+                        }
+                        getPlayer().start();
+                        mIsPlayerPlaying.setValue(true);
+                    }
+                }).start();
+
+            }
+        });
+
+        loadHtmlAsyncTask.execute();
+    }
+
+    public void playPrevious(){
+        getPlayer().reset();
+        mIsPlayerPlaying.setValue(false);
+        getPlayer().setAudioStreamType(AudioManager.STREAM_MUSIC);
+
+        mNowPlaying = mTracks.get(mTracks.indexOf(getTrackById(mNowPlaying)) - 1).getID();
+        NetHelper.LoadHtmlAsyncTask loadHtmlAsyncTask = new NetHelper.LoadHtmlAsyncTask(getTrackById(mNowPlaying).getLink());
+        loadHtmlAsyncTask.addOnLoadedHtmlListener(new NetHelper.LoadHtmlAsyncTask.OnLoadedHtmlListener() {
+            @Override
+            public void run(final String htmlStr) {
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+
+
+                        Track track = getTrackById(mNowPlaying);
+
+                        try {
+                            getPlayer().setDataSource(new JSONObject(htmlStr).getString("url"));
+                            getPlayer().prepare();
+                        } catch (IOException | JSONException e) {
+                            e.printStackTrace();
+                        }
+                        getPlayer().start();
+                        mIsPlayerPlaying.setValue(true);
+                    }
+                }).start();
+
+            }
+        });
+
+        loadHtmlAsyncTask.execute();
+    }
+
+    public void playOrPause(){
+        if(getPlayer().isPlaying()) {
+            getPlayer().pause();
+            mIsPlayerPlaying.setValue(false);
+        }
+        else {
+            getPlayer().start();
+            mIsPlayerPlaying.setValue(true);
+        }
+    }
+
+
+    public interface OnTracksDownloadedListener{
         void run(TrackStorage trackStorage);
     }
 
@@ -114,6 +227,7 @@ public class TrackStorage {
             for(OnTracksDownloadedListener p : listeners){
                 p.run(TrackStorage.this);
             }
+            mNowPlaying = mTracks.get(0).getID();
         }
 
     }

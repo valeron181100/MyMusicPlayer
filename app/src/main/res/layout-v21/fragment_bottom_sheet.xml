@@ -9,14 +9,15 @@
 
     <ImageView
         android:id="@+id/imageView"
-        android:layout_width="250dp"
-        android:layout_height="250dp"
-        android:background="@drawable/rounded_corner_background"
+        android:layout_width="300dp"
+        android:layout_height="300dp"
+        android:background="@color/DeepSkyBlue"
         android:elevation="10dp"
         android:padding="16dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/trackTitleLayout"
         app:srcCompat="@drawable/ic_musical_note" />
 
     <LinearLayout
@@ -24,31 +25,35 @@
         android:layout_width="300dp"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        app:layout_constraintBottom_toTopOf="@+id/seekBar2"
+        app:layout_constraintBottom_toTopOf="@+id/musicSeekBar"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/imageView">
 
         <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:id="@+id/trackTitleTV"
             style="@style/PlayerNameSongTextViewStyle"
-            android:text="Some Author" />
-
-        <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
+            android:text="Some name name"
+            android:textColor="@color/Black" />
+
+        <TextView
+            android:id="@+id/trackAuthorTV"
             style="@style/PlayerNameSongTextViewStyle"
-            android:textColor="@color/Black"
-            android:text="Some name name" />
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Some Author"
+            android:textColor="@color/DimGray"
+            android:textSize="15sp" />
+
     </LinearLayout>
 
     <SeekBar
-        android:id="@+id/seekBar2"
+        android:id="@+id/musicSeekBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:progress="70"
         app:layout_constraintBottom_toTopOf="@+id/linearLayout"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
@@ -76,7 +81,7 @@
             android:layout_height="75dp"
             android:layout_gravity="center"
             android:background="?attr/selectableItemBackground"
-            app:srcCompat="@drawable/ic_play_arrow_black_24dp" />
+            app:srcCompat="@drawable/ic_play_circle_outline_black" />
 
         <ImageButton
             android:id="@+id/nextTrackButton"

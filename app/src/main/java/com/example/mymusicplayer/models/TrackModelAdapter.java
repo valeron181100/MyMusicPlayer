@@ -7,12 +7,14 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.example.mymusicplayer.BottomSheetFragment;
 import com.example.mymusicplayer.R;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -20,7 +22,12 @@ import androidx.recyclerview.widget.RecyclerView;
 public class TrackModelAdapter extends RecyclerView.Adapter<TrackModelAdapter.TrackHolder> {
 
     private TrackStorage mTrackStorage;
+    private NetHelper.LoadHtmlAsyncTask.OnLoadedHtmlListener mOnLoadedHtmlListener;
 
+
+    public void setOnLoadedHtmlListener(NetHelper.LoadHtmlAsyncTask.OnLoadedHtmlListener onLoadedHtmlListener) {
+        mOnLoadedHtmlListener = onLoadedHtmlListener;
+    }
 
     public TrackModelAdapter() {
         mTrackStorage = TrackStorage.getInstance();
@@ -45,7 +52,6 @@ public class TrackModelAdapter extends RecyclerView.Adapter<TrackModelAdapter.Tr
     public int getItemCount() {
         return mTrackStorage.size();
     }
-
 
     class TrackHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
         //TODO: CoverTrackImage
@@ -73,29 +79,44 @@ public class TrackModelAdapter extends RecyclerView.Adapter<TrackModelAdapter.Tr
         public void onClick(View v) {
             if(mTrack != null){
                 NetHelper.LoadHtmlAsyncTask loadHtmlAsyncTask = new NetHelper.LoadHtmlAsyncTask(mTrack.getLink());
+                loadHtmlAsyncTask.addOnLoadedHtmlListener(mOnLoadedHtmlListener);
                 loadHtmlAsyncTask.addOnLoadedHtmlListener(new NetHelper.LoadHtmlAsyncTask.OnLoadedHtmlListener() {
                     @Override
                     public void run(final String htmlStr) {
                         mTrackStorage.getPlayer().reset();
+                        mTrackStorage.setIsPlayerPlaying(false);
                         mTrackStorage.getPlayer().setAudioStreamType(AudioManager.STREAM_MUSIC);
 
                         new Thread(new Runnable() {
                             @Override
                             public void run() {
                                 try {
-                                    mTrackStorage.getPlayer().setDataSource(new JSONObject(htmlStr).getString("url"));
+                                    String url = new JSONObject(htmlStr).getString("url");
+                                    mTrackStorage.getPlayer().setDataSource(url);
                                     mTrackStorage.getPlayer().prepare();
                                 } catch (IOException e) {
                                     e.printStackTrace();
                                 } catch (JSONException e) {
                                     e.printStackTrace();
                                 }
+
+                                BottomSheetFragment.mScheduler.schedule(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        int mCurrentPosition = TrackStorage.getInstance().getPlayer().getCurrentPosition() / 1000;
+                                        BottomSheetFragment.mMusicSeekBar.setProgress(mCurrentPosition);
+                                        BottomSheetFragment.mHandler.postDelayed(this, 1000);
+                                    }
+                                }, 1000, TimeUnit.MILLISECONDS);
+
                                 mTrackStorage.getPlayer().start();
+                                mTrackStorage.setIsPlayerPlaying(true);
                             }
                         }).start();
-
+                        mTrackStorage.setNowPlaying(mTrack.getID());
                     }
                 });
+
 
                 loadHtmlAsyncTask.execute();
 

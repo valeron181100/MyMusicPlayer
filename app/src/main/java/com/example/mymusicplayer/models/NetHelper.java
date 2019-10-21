@@ -54,7 +54,8 @@ public class NetHelper {
         @Override
         protected void onPostExecute(String s) {
             for(OnLoadedHtmlListener p : listeners){
-                p.run(s);
+                if(p != null)
+                    p.run(s);
             }
         }
 

@@ -5,10 +5,14 @@ import android.widget.TextView;
 
 import com.example.mymusicplayer.R;
 
+import java.util.UUID;
+
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 public class Track {
+
+    private UUID mID;
     private String title;
     private String authorName;
     private String link;
@@ -18,6 +22,7 @@ public class Track {
         this.title = title;
         this.authorName = authorName;
         this.link = link;
+        mID = UUID.randomUUID();
     }
 
     public Track(String title, String authorName, String link, String coverLink) {
@@ -25,6 +30,11 @@ public class Track {
         this.authorName = authorName;
         this.link = link;
         this.coverLink = coverLink;
+        mID = UUID.randomUUID();
+    }
+
+    public UUID getID() {
+        return mID;
     }
 
     public String getTitle() {
