@@ -5,13 +5,16 @@
     android:id="@+id/linearLayout2"
     android:background="?android:attr/selectableItemBackground"
     android:layout_width="match_parent"
-    android:layout_height="40dp">
+    android:padding="10dp"
+    android:layout_height="70dp">
 
     <ImageView
         android:id="@+id/trackCoverIV"
         android:layout_width="40dp"
         android:layout_height="40dp"
+        android:contentDescription="@string/musicimage"
         android:background="@color/DeepSkyBlue"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:srcCompat="@drawable/ic_music" />
@@ -21,6 +24,7 @@
         android:layout_height="wrap_content"
         tools:text="Dance Monkey"
         android:layout_marginStart="20dp"
+
         app:layout_constraintStart_toEndOf="@id/trackCoverIV"
         app:layout_constraintTop_toTopOf="parent"
         android:textStyle="bold"

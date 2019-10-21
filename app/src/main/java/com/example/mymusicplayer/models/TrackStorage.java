@@ -1,6 +1,7 @@
 package com.example.mymusicplayer.models;
 
 import android.content.Context;
+import android.media.MediaPlayer;
 import android.os.AsyncTask;
 
 import org.jsoup.Jsoup;
@@ -23,11 +24,17 @@ public class TrackStorage {
     private static TrackStorage instance;
     private ArrayList<Track> mTracks;
     private ArrayList<OnTracksDownloadedListener> listeners;
+    private MediaPlayer mPlayer;
 
     private TrackStorage(){
         mTracks = new ArrayList<>();
         listeners = new ArrayList<>();
+        mPlayer = new MediaPlayer();
         loadTracksAsync();
+    }
+
+    public MediaPlayer getPlayer() {
+        return mPlayer;
     }
 
     public static TrackStorage getInstance(){

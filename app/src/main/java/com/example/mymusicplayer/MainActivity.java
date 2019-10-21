@@ -68,10 +68,8 @@ public class MainActivity extends AppCompatActivity {
             bottomFragment = new BottomSheetFragment();
         }
 
-        fmTransaction.add(R.id.mainViewFragment, fragment, MAIN_VIEW_FRAGMENT_TAG).
-                add(R.id.bottomFragmentContainer, bottomFragment, BOTTOM_SHEET_FRAGMENT_TAG).commit();
-
-
+        fmTransaction.replace(R.id.mainViewFragment, fragment, MAIN_VIEW_FRAGMENT_TAG).
+                replace(R.id.bottomFragmentContainer, bottomFragment, BOTTOM_SHEET_FRAGMENT_TAG).commit();
 
 
         mLLBehaviour.setBottomSheetCallback(new BottomSheetBehavior.BottomSheetCallback() {

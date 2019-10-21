@@ -39,11 +39,10 @@ public class MainViewFragment extends Fragment {
         mTracksRV = v.findViewById(R.id.tracksRV);
         mLayoutManager = new LinearLayoutManager(this.getContext());
         mPlayer = new MediaPlayer();
-        mAdapter = new TrackModelAdapter(mPlayer);
+        mAdapter = new TrackModelAdapter();
 
         mTracksRV.setLayoutManager(mLayoutManager);
         mTracksRV.setAdapter(mAdapter);
-
 
         return v;
 

@@ -13,7 +13,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
-import java.net.URLConnection;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -21,11 +20,11 @@ import androidx.recyclerview.widget.RecyclerView;
 public class TrackModelAdapter extends RecyclerView.Adapter<TrackModelAdapter.TrackHolder> {
 
     private TrackStorage mTrackStorage;
-    private MediaPlayer mPlayer;
 
-    public TrackModelAdapter(MediaPlayer player) {
+
+    public TrackModelAdapter() {
         mTrackStorage = TrackStorage.getInstance();
-        mPlayer = player;
+
     }
 
     @NonNull
@@ -77,21 +76,21 @@ public class TrackModelAdapter extends RecyclerView.Adapter<TrackModelAdapter.Tr
                 loadHtmlAsyncTask.addOnLoadedHtmlListener(new NetHelper.LoadHtmlAsyncTask.OnLoadedHtmlListener() {
                     @Override
                     public void run(final String htmlStr) {
-                        mPlayer.reset();
-                        mPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+                        mTrackStorage.getPlayer().reset();
+                        mTrackStorage.getPlayer().setAudioStreamType(AudioManager.STREAM_MUSIC);
 
                         new Thread(new Runnable() {
                             @Override
                             public void run() {
                                 try {
-                                    mPlayer.setDataSource(new JSONObject(htmlStr).getString("url"));
-                                    mPlayer.prepare();
+                                    mTrackStorage.getPlayer().setDataSource(new JSONObject(htmlStr).getString("url"));
+                                    mTrackStorage.getPlayer().prepare();
                                 } catch (IOException e) {
                                     e.printStackTrace();
                                 } catch (JSONException e) {
                                     e.printStackTrace();
                                 }
-                                mPlayer.start();
+                                mTrackStorage.getPlayer().start();
                             }
                         }).start();
 
