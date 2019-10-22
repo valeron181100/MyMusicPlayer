@@ -1,27 +1,47 @@
 package com.example.mymusicplayer.models;
 
+import android.annotation.SuppressLint;
+import android.app.Activity;
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.Drawable;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.os.Handler;
+import android.os.HandlerThread;
+import android.os.Message;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.example.mymusicplayer.BottomSheetFragment;
+import com.example.mymusicplayer.MainActivity;
+import com.example.mymusicplayer.MainViewFragment;
 import com.example.mymusicplayer.R;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.net.URLConnection;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.RecyclerView;
 
 public class TrackModelAdapter extends RecyclerView.Adapter<TrackModelAdapter.TrackHolder> {
 
     private TrackStorage mTrackStorage;
+    private AppCompatActivity mMainActivity;
     private NetHelper.LoadHtmlAsyncTask.OnLoadedHtmlListener mOnLoadedHtmlListener;
 
 
@@ -29,9 +49,9 @@ public class TrackModelAdapter extends RecyclerView.Adapter<TrackModelAdapter.Tr
         mOnLoadedHtmlListener = onLoadedHtmlListener;
     }
 
-    public TrackModelAdapter() {
+    public TrackModelAdapter(AppCompatActivity activity) {
         mTrackStorage = TrackStorage.getInstance();
-
+        mMainActivity = activity;
     }
 
     @NonNull
@@ -53,18 +73,20 @@ public class TrackModelAdapter extends RecyclerView.Adapter<TrackModelAdapter.Tr
         return mTrackStorage.size();
     }
 
-    class TrackHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
+    public class TrackHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
         //TODO: CoverTrackImage
 
         private TextView mTitleTV;
         private TextView mAuthorTV;
         private Track mTrack;
+        private ImageView mCoverIV;
 
 
         public TrackHolder(@NonNull View itemView) {
             super(itemView);
             mTitleTV = itemView.findViewById(R.id.trackTitleTV);
             mAuthorTV = itemView.findViewById(R.id.trackAuthorTV);
+            mCoverIV = itemView.findViewById(R.id.trackCoverIV);
 
             itemView.setOnClickListener(this);
         }
@@ -73,6 +95,14 @@ public class TrackModelAdapter extends RecyclerView.Adapter<TrackModelAdapter.Tr
             mTitleTV.setText(track.getTitle());
             mAuthorTV.setText(track.getAuthorName());
             mTrack = track;
+            Fragment fragment = mMainActivity.getSupportFragmentManager().findFragmentByTag(MainActivity.MAIN_VIEW_FRAGMENT_TAG);
+            if(fragment != null){
+                ((MainViewFragment)fragment).sendCoverRequest(this, mTrack.getCoverLink());
+            }
+        }
+
+        public void bindDrawable(Drawable drawable){
+            mCoverIV.setImageDrawable(drawable);
         }
 
         @Override
@@ -84,7 +114,7 @@ public class TrackModelAdapter extends RecyclerView.Adapter<TrackModelAdapter.Tr
                     @Override
                     public void run(final String htmlStr) {
                         mTrackStorage.getPlayer().reset();
-                        mTrackStorage.setIsPlayerPlaying(false);
+                        //mTrackStorage.setIsPlayerPlaying(false);
                         mTrackStorage.getPlayer().setAudioStreamType(AudioManager.STREAM_MUSIC);
 
                         new Thread(new Runnable() {

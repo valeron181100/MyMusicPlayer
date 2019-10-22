@@ -213,9 +213,9 @@ public class TrackStorage {
                     String title = split[1];
                     String authorName = titleAuthor.split(" ")[1];
                     String dataLink = urlStr + element.attr("data-url");
-                    //TODO: Cover Image downloading
+                    String coverLink = urlStr + element.child(3).attr("href");
 
-                    Track track = new Track(title, authorName, dataLink);
+                    Track track = new Track(title, authorName, dataLink, coverLink);
                     list.add(track);
                 }
 

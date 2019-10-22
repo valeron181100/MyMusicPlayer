@@ -40,7 +40,7 @@ import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final String MAIN_VIEW_FRAGMENT_TAG = "MAIN_VIEW_FRAGMENT_TAG";
+    public static final String MAIN_VIEW_FRAGMENT_TAG = "MAIN_VIEW_FRAGMENT_TAG";
     private static final String BOTTOM_SHEET_FRAGMENT_TAG = "BOTTOM_SHEET_FRAGMENT_TAG";
     private static final String TAG = "MMP";
 
@@ -58,8 +58,9 @@ public class MainActivity extends AppCompatActivity {
     private TextView mAuthorNameTV;
     private TextView mTitleTV;
 
+    private BottomSheetBehavior<LinearLayout> mLLBehaviour;
 
-
+    private boolean mIsBottomPanelShown = false;
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
@@ -81,12 +82,12 @@ public class MainActivity extends AppCompatActivity {
 
         mPlayButton.setOnClickListener(playerConrolButtonListener);
 
-        BottomSheetBehavior<LinearLayout> mLLBehaviour = BottomSheetBehavior.from(mBottomLayout);
-
-        FragmentManager fm = getSupportFragmentManager();
+        mLLBehaviour = BottomSheetBehavior.from(mBottomLayout);
+        mLLBehaviour.setPeekHeight(convertDpToPixels(55, this));
+        final FragmentManager fm = getSupportFragmentManager();
         Fragment fragment = fm.findFragmentByTag(MAIN_VIEW_FRAGMENT_TAG);
         Fragment bottomFragment = fm.findFragmentByTag(BOTTOM_SHEET_FRAGMENT_TAG);
-        FragmentTransaction fmTransaction = fm.beginTransaction();
+        final FragmentTransaction fmTransaction = fm.beginTransaction();
 
         if(fragment == null){
             fragment = new MainViewFragment();
@@ -98,13 +99,26 @@ public class MainActivity extends AppCompatActivity {
         fmTransaction.replace(R.id.mainViewFragment, fragment, MAIN_VIEW_FRAGMENT_TAG).
                 replace(R.id.bottomFragmentContainer, bottomFragment, BOTTOM_SHEET_FRAGMENT_TAG).commit();
 
-
+        final boolean[] isBottomBarExpanded = {false};
         mLLBehaviour.setBottomSheetCallback(new BottomSheetBehavior.BottomSheetCallback() {
 
 
             @Override
             public void onStateChanged(@NonNull View view, int i) {
 
+                Fragment bottomFragment = fm.findFragmentByTag(BOTTOM_SHEET_FRAGMENT_TAG);
+                if(BottomSheetBehavior.STATE_COLLAPSED == i){
+                    isBottomBarExpanded[0] = false;
+                    Log.d(TAG, "BottomBar Collapsed");
+                    fmTransaction.hide(bottomFragment);
+                }
+                if(BottomSheetBehavior.STATE_EXPANDED == i) isBottomBarExpanded[0] = true;
+                if(BottomSheetBehavior.STATE_DRAGGING == i){
+                    if (!isBottomBarExpanded[0]){
+                        Log.d(TAG, "BottomBar Expanding");
+                        fmTransaction.show(bottomFragment);
+                    }
+                }
             }
 
             @Override
@@ -143,9 +157,7 @@ public class MainActivity extends AppCompatActivity {
                         mBottomSheet.setAlpha(1.0f - v * 4);
                     }
                 }
-                Log.d(TAG, "Before"+mpreviousBottomSheetOffset);
                 mpreviousBottomSheetOffset = v;
-                Log.d(TAG, "After"+mpreviousBottomSheetOffset);
             }
         });
 
@@ -160,6 +172,11 @@ public class MainActivity extends AppCompatActivity {
                 public void run() {
                     mAuthorNameTV.setText(track.getAuthorName());
                     mTitleTV.setText(track.getTitle());
+                    if(!mIsBottomPanelShown){
+                        mIsBottomPanelShown = true;
+                        mBottomLayout.setVisibility(View.VISIBLE);
+                        mLLBehaviour.setPeekHeight(convertDpToPixels(105, MainActivity.this));
+                    }
                     if(TrackStorage.getInstance().getPlayer().isPlaying())
                         mPlayButton.setImageResource(R.drawable.ic_pause_black_35dp);
                     else

@@ -13,6 +13,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
@@ -35,6 +36,7 @@ public class BottomSheetFragment extends Fragment {
     private ImageButton mPlayButton;
     private ImageButton mPlayPrevButton;
     private ImageButton mPlayNextButton;
+    private ImageView mCoverTrackIV;
 
     private TextView mTitleTV;
     private TextView mAuthorNameTV;
@@ -65,6 +67,8 @@ public class BottomSheetFragment extends Fragment {
         mPlayButton.setOnClickListener(playerConrolButtonsListener);
         mPlayNextButton.setOnClickListener(playerConrolButtonsListener);
         mPlayPrevButton.setOnClickListener(playerConrolButtonsListener);
+
+        mCoverTrackIV = v.findViewById(R.id.trackCoverIV);
 
         mHandler = new Handler();
         mScheduler = Executors.newScheduledThreadPool(1);

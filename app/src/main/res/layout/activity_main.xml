@@ -20,6 +20,7 @@
         style="@style/Widget.AppCompat.ProgressBar.Horizontal"
         android:layout_alignBottom="@id/bottom_navigation"
         android:progress="70"
+        android:visibility="gone"
         android:orientation="vertical"
         android:background="@color/White"
         app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior"
