@@ -4,4 +4,8 @@
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="musicimage">MusicImage</string>
+    <string name="home">Home</string>
+    <string name="nav_home_text">Home</string>
+    <string name="nav_favourite_text">Favourite</string>
+    <string name="nav_settings_text">Settings</string>
 </resources>

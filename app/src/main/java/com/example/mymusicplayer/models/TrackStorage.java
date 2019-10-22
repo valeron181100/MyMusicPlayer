@@ -35,6 +35,7 @@ public class TrackStorage {
         mTracks = new ArrayList<>();
         listeners = new ArrayList<>();
         mPlayer = new MediaPlayer();
+        mPlayer.setLooping(true);
         mNowPlaying = null;
         mIsPlayerPlaying = new ObservableBoolean(false);
 
@@ -97,7 +98,8 @@ public class TrackStorage {
         getPlayer().reset();
         mIsPlayerPlaying.setValue(false);
         getPlayer().setAudioStreamType(AudioManager.STREAM_MUSIC);
-        mNowPlaying = mTracks.get(mTracks.indexOf(getTrackById(mNowPlaying)) + 1).getID();
+        int indexCurrent = mTracks.indexOf(getTrackById(mNowPlaying));
+        mNowPlaying = mTracks.get((indexCurrent == mTracks.size() - 1 ? -1 : indexCurrent) + 1).getID();
         Track t = getTrackById(mNowPlaying);
         NetHelper.LoadHtmlAsyncTask loadHtmlAsyncTask = new NetHelper.LoadHtmlAsyncTask(getTrackById(mNowPlaying).getLink());
         loadHtmlAsyncTask.addOnLoadedHtmlListener(new NetHelper.LoadHtmlAsyncTask.OnLoadedHtmlListener() {
@@ -132,7 +134,8 @@ public class TrackStorage {
         mIsPlayerPlaying.setValue(false);
         getPlayer().setAudioStreamType(AudioManager.STREAM_MUSIC);
 
-        mNowPlaying = mTracks.get(mTracks.indexOf(getTrackById(mNowPlaying)) - 1).getID();
+        int indexCurrent = mTracks.indexOf(getTrackById(mNowPlaying));
+        mNowPlaying = mTracks.get((indexCurrent == 0 ? mTracks.size() : indexCurrent) - 1).getID();
         NetHelper.LoadHtmlAsyncTask loadHtmlAsyncTask = new NetHelper.LoadHtmlAsyncTask(getTrackById(mNowPlaying).getLink());
         loadHtmlAsyncTask.addOnLoadedHtmlListener(new NetHelper.LoadHtmlAsyncTask.OnLoadedHtmlListener() {
             @Override
@@ -162,6 +165,9 @@ public class TrackStorage {
     }
 
     public void playOrPause(){
+        if(mNowPlaying == null){
+            playNext();
+        }
         if(getPlayer().isPlaying()) {
             getPlayer().pause();
             mIsPlayerPlaying.setValue(false);

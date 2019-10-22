@@ -10,23 +10,33 @@ import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.transition.Transition;
 
+import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.TransitionDrawable;
 import android.nfc.Tag;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.util.AttributeSet;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.example.mymusicplayer.models.ObservableBoolean;
+import com.example.mymusicplayer.models.Track;
 import com.example.mymusicplayer.models.TrackStorage;
 import com.google.android.material.appbar.AppBarLayout;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
+
+import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -35,11 +45,20 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MMP";
 
     private ImageButton mCollaseBottomBarButton;
-    private LinearLayout mBottomSheet;
+    private RelativeLayout mBottomSheet;
     private RelativeLayout mBottomSheetExpanded;
     private LinearLayout mBottomLayout;
     private float mpreviousBottomSheetOffset = 0.0f;
     private TrackStorage mTrackStorage;
+    private BottomNavigationView mBottomNavigation;
+
+
+    private ImageButton mPlayButton;
+    private Handler mHandler;
+    private TextView mAuthorNameTV;
+    private TextView mTitleTV;
+
+
 
 
     @RequiresApi(api = Build.VERSION_CODES.M)
@@ -52,7 +71,15 @@ public class MainActivity extends AppCompatActivity {
         mBottomLayout = findViewById(R.id.bottomLayout);
         mBottomSheetExpanded = findViewById(R.id.bottomSheetExpanded);
         mTrackStorage = TrackStorage.getInstance();
+        mBottomNavigation = findViewById(R.id.bottom_navigation);
+        mPlayButton = findViewById(R.id.playTrackButton);
+        mAuthorNameTV = findViewById(R.id.trackAuthorTV);
+        mTitleTV = findViewById(R.id.trackTitleTV);
+        mHandler = new Handler();
 
+        TrackStorage.getInstance().getIsPlayerPlaying().addOnChangeValueListener(onChangeValueListener);
+
+        mPlayButton.setOnClickListener(playerConrolButtonListener);
 
         BottomSheetBehavior<LinearLayout> mLLBehaviour = BottomSheetBehavior.from(mBottomLayout);
 
@@ -84,7 +111,11 @@ public class MainActivity extends AppCompatActivity {
             public void onSlide(@NonNull View view, float v) {
                 if(mpreviousBottomSheetOffset <= v) {
                     if (v <= 0.5f)
-                        mBottomSheet.setAlpha(1.0f - v * 2);
+                        mBottomSheet.setAlpha(1.0f - v * 4);
+                        if(v <= 0.25){
+                            float translateY = v * convertDpToPixels(400, MainActivity.this);
+                            mBottomNavigation.setTranslationY(translateY);
+                        }
                     else {
                         if (mBottomSheet.getAlpha() != 0.0f) {
                             mBottomSheet.setAlpha(0.0f);
@@ -103,7 +134,13 @@ public class MainActivity extends AppCompatActivity {
                             mBottomSheet.setAlpha(0.0f);
 
                         }
-                        mBottomSheet.setAlpha(1.0f - v * 2);
+
+                        if(v <= 0.25){
+                            float translateY = v * convertDpToPixels(400, MainActivity.this);
+                            mBottomNavigation.setTranslationY(translateY);
+                        }
+
+                        mBottomSheet.setAlpha(1.0f - v * 4);
                     }
                 }
                 Log.d(TAG, "Before"+mpreviousBottomSheetOffset);
@@ -112,5 +149,42 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+    }
+
+    private ObservableBoolean.OnChangeValueListener onChangeValueListener = new ObservableBoolean.OnChangeValueListener() {
+        @Override
+        public void onChange(Boolean oldVal, final Boolean newVal) {
+            final Track track = TrackStorage.getInstance().getTrackById(TrackStorage.getInstance().getNowPlaying());
+            mHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    mAuthorNameTV.setText(track.getAuthorName());
+                    mTitleTV.setText(track.getTitle());
+                    if(TrackStorage.getInstance().getPlayer().isPlaying())
+                        mPlayButton.setImageResource(R.drawable.ic_pause_black_35dp);
+                    else
+                        mPlayButton.setImageResource(R.drawable.ic_play_arrow_black_35dp);
+                }
+            });
+
+
+        }
+    };
+
+    private View.OnClickListener playerConrolButtonListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            TrackStorage trackStorage = TrackStorage.getInstance();
+            trackStorage.playOrPause();
+            if(TrackStorage.getInstance().getPlayer().isPlaying())
+                mPlayButton.setImageResource(R.drawable.ic_pause_black_35dp);
+            else
+                mPlayButton.setImageResource(R.drawable.ic_play_arrow_black_35dp);
+        }
+    };
+
+    public static int convertDpToPixels(float dp, Context context) {
+        int px = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, context.getResources().getDisplayMetrics());
+        return px;
     }
 }
