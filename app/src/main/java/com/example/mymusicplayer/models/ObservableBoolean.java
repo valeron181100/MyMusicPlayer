@@ -35,6 +35,10 @@ public class ObservableBoolean {
     public void addOnChangeValueListener(OnChangeValueListener listener){
         listeners.add(listener);
     }
+    public void removeOnChangeValueListener(OnChangeValueListener listener){
+        listeners.remove(listener);
+    }
+
 
     public interface OnChangeValueListener{
         void onChange(Boolean oldVal, Boolean newVal);
