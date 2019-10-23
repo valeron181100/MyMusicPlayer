@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
@@ -32,6 +33,7 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -39,7 +41,7 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.RecyclerView;
 
 public class TrackModelAdapter extends RecyclerView.Adapter<TrackModelAdapter.TrackHolder> {
-
+    private static ReentrantLock lock = new ReentrantLock();
     private TrackStorage mTrackStorage;
     private AppCompatActivity mMainActivity;
     private NetHelper.LoadHtmlAsyncTask.OnLoadedHtmlListener mOnLoadedHtmlListener;
@@ -82,6 +84,7 @@ public class TrackModelAdapter extends RecyclerView.Adapter<TrackModelAdapter.Tr
         private ImageView mCoverIV;
 
 
+
         public TrackHolder(@NonNull View itemView) {
             super(itemView);
             mTitleTV = itemView.findViewById(R.id.trackTitleTV);
@@ -95,10 +98,25 @@ public class TrackModelAdapter extends RecyclerView.Adapter<TrackModelAdapter.Tr
             mTitleTV.setText(track.getTitle());
             mAuthorTV.setText(track.getAuthorName());
             mTrack = track;
-            Fragment fragment = mMainActivity.getSupportFragmentManager().findFragmentByTag(MainActivity.MAIN_VIEW_FRAGMENT_TAG);
-            if(fragment != null){
-                ((MainViewFragment)fragment).sendCoverRequest(this, mTrack.getCoverLink());
+            mCoverIV.setImageResource(R.drawable.ic_musical_note);
+
+            lock.lock();
+
+            GlobalTrackCoverCache cache = GlobalTrackCoverCache.getInstance();
+            Bitmap bitmap = cache.get(mTrack.getID());
+            if(bitmap != null) {
+                mCoverIV.setImageDrawable(new BitmapDrawable(mMainActivity.getResources(), bitmap));
+            }else {
+                Fragment fragment = mMainActivity.getSupportFragmentManager().findFragmentByTag(MainActivity.MAIN_VIEW_FRAGMENT_TAG);
+                if (fragment != null) {
+                    ((MainViewFragment) fragment).sendCoverRequest(this, mTrack);
+                }
             }
+            lock.unlock();
+        }
+
+        public Track getTrack() {
+            return mTrack;
         }
 
         public void bindDrawable(Drawable drawable){

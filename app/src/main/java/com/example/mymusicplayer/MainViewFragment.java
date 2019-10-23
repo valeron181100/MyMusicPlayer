@@ -19,6 +19,8 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.example.mymusicplayer.models.CoverDownloaderThread;
+import com.example.mymusicplayer.models.GlobalTrackCoverCache;
+import com.example.mymusicplayer.models.Track;
 import com.example.mymusicplayer.models.TrackModelAdapter;
 
 import java.util.HashMap;
@@ -58,10 +60,12 @@ public class MainViewFragment extends Fragment {
         mCoverDownloaderThread.setOnCoverDownloadedListener(
                 new CoverDownloaderThread.OnCoverDownloadedListener<TrackModelAdapter.TrackHolder>() {
             @Override
-            public void downloaded(TrackModelAdapter.TrackHolder holder, Bitmap cover) {
+            public void downloaded(TrackModelAdapter.TrackHolder holder, Bitmap cover, Track realTrack) {
+                BitmapDrawable bitmapDrawable = new BitmapDrawable(getResources(), cover);
 
-                holder.bindDrawable(new BitmapDrawable(getResources(), cover));
-
+                GlobalTrackCoverCache.getInstance().put(realTrack.getID(), cover);
+                if(holder.getTrack().getID().equals(realTrack.getID()))
+                    holder.bindDrawable(bitmapDrawable);
             }
         });
 
@@ -69,8 +73,8 @@ public class MainViewFragment extends Fragment {
 
     }
 
-    public void sendCoverRequest(TrackModelAdapter.TrackHolder holder, String url){
-        mCoverDownloaderThread.queueMessage(holder, url);
+    public void sendCoverRequest(TrackModelAdapter.TrackHolder holder, Track track){
+        mCoverDownloaderThread.queueMessage(holder, track);
     }
 
     @Override

@@ -3,6 +3,7 @@ package com.example.mymusicplayer;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.collection.LruCache;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
@@ -160,6 +161,7 @@ public class MainActivity extends AppCompatActivity {
                 mpreviousBottomSheetOffset = v;
             }
         });
+
 
     }
 

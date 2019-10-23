@@ -25,10 +25,12 @@ public class CoverDownloaderThread<T> extends HandlerThread {
     private static final String TAG = "ThumbnailDownloader";
     private static final int MESSAGE_DOWNLOAD = 0;
     private Handler mRequestHandler;
-    private ConcurrentHashMap<T,String> mRequestMap;
+    private ConcurrentHashMap<T,Track> mRequestMap;
     private OnCoverDownloadedListener<T> mDownloadedListener;
     private Handler mResponseHandler;
     private boolean mHasQuit = false;
+
+    private Track mTrack;
 
     @Override
     public boolean quit(){
@@ -65,21 +67,24 @@ public class CoverDownloaderThread<T> extends HandlerThread {
         };
     }
 
-    public void queueMessage(T holder, String url){
-        if(url == null){
+    public void queueMessage(T holder, Track track){
+        mTrack = track;
+        if(mTrack.getCoverLink() == null){
             mRequestMap.remove(holder);
         }else{
-            mRequestMap.put(holder, url);
+            mRequestMap.put(holder, track);
             mRequestHandler.obtainMessage(MESSAGE_DOWNLOAD, holder).sendToTarget();
         }
     }
 
     public void handleRequest(final T holder){
-        final String url = mRequestMap.get(holder);
+        final Track track = mRequestMap.get(holder);
         try {
-            if (url == null) {
+            if (track == null) {
                 return;
             }
+
+            final String url = track.getCoverLink();
 
             URLConnection connection = new URL(url).openConnection();
 
@@ -99,25 +104,20 @@ public class CoverDownloaderThread<T> extends HandlerThread {
                 String coverUrl = elements.get(0).attr("src");
                 connection = new URL(coverUrl).openConnection();
                 stream = connection.getInputStream();
-                baos = new ByteArrayOutputStream();
-
-                while (stream.read(buff) != -1) {
-                    baos.write(buff);
-                }
-
-                byte[] bitMapBytes = baos.toByteArray();
-                final Bitmap bitmap = BitmapFactory.decodeByteArray(bitMapBytes, 0, bitMapBytes.length);
+                final Bitmap bitmap = BitmapFactory.decodeStream(stream);
 
                 mResponseHandler.post(new Runnable() {
                     @Override
                     public void run() {
-                        if(mRequestMap.get(holder) != url || mHasQuit){
+                        Track track1 = mRequestMap.get(holder);
+                        if(track1 != null)
+                        if(track1.getCoverLink() != url || mHasQuit){
                             return;
                         }
 
                         mRequestMap.remove(holder);
                         if(mDownloadedListener != null){
-                            mDownloadedListener.downloaded(holder, bitmap);
+                            mDownloadedListener.downloaded(holder, bitmap, track);
                         }
 
                     }
@@ -130,7 +130,7 @@ public class CoverDownloaderThread<T> extends HandlerThread {
     }
 
     public interface OnCoverDownloadedListener<T>{
-        void downloaded(T holder, Bitmap cover);
+        void downloaded(T holder, Bitmap cover, Track realTrack);
     }
 
 }

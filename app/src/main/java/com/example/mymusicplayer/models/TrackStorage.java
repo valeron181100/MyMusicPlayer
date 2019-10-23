@@ -3,6 +3,7 @@ package com.example.mymusicplayer.models;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.AsyncTask;
+import android.util.Log;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -108,8 +109,6 @@ public class TrackStorage {
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
-
-
                         Track track = getTrackById(mNowPlaying);
 
                         try {
@@ -188,7 +187,8 @@ public class TrackStorage {
 
         @Override
         protected ArrayList<Track> doInBackground(String... strings) {
-            String urlStr = "https://zaycev.net";
+            String rootUrlStr = "https://zaycev.net";
+            String urlStr = "https://zaycev.net/musicset/top100august2019.shtml";
             ArrayList<Track> list = new ArrayList<>();
             try {
                 URL url = new URL(urlStr);
@@ -205,21 +205,27 @@ public class TrackStorage {
 
                 Document document = Jsoup.parse(xmlStr);
 
-                Elements selectedArray = document.select(".columns-block-tracks .musicset-track-list__items [itemprop='track']");
-
+                Elements selectedArray = document.select(".musicset-track-list__items>div");
+                int ctr = 0;
                 for(Element element : selectedArray){
+                    ctr++;
                     String titleAuthor = element.attr("title");
+                    if(titleAuthor.isEmpty()) continue;
                     String[] split = titleAuthor.split(" – ");
+                    if(ctr == 32)
+                        Log.d("Track", titleAuthor);
                     String title = split[1];
                     String authorName = titleAuthor.split(" ")[1];
-                    String dataLink = urlStr + element.attr("data-url");
-                    String coverLink = urlStr + element.child(3).attr("href");
-
+                    String dataLink = rootUrlStr + element.attr("data-url");
+                    String coverLink = null;
+                    int size = element.childNodes().size();
+                    if(size >= 4) {
+                         coverLink = rootUrlStr + element.child(3).attr("href");
+                    }
                     Track track = new Track(title, authorName, dataLink, coverLink);
+
                     list.add(track);
                 }
-
-                int k =0;
 
             } catch (IOException e) {
                 e.printStackTrace();

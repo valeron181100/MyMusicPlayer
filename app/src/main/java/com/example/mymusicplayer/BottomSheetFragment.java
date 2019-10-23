@@ -1,6 +1,7 @@
 package com.example.mymusicplayer;
 
 import android.content.Context;
+import android.graphics.drawable.BitmapDrawable;
 import android.media.Image;
 import android.media.MediaPlayer;
 import android.net.Uri;
@@ -10,6 +11,7 @@ import androidx.fragment.app.Fragment;
 
 import android.os.Handler;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
@@ -17,6 +19,7 @@ import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
+import com.example.mymusicplayer.models.GlobalTrackCoverCache;
 import com.example.mymusicplayer.models.ObservableBoolean;
 import com.example.mymusicplayer.models.Track;
 import com.example.mymusicplayer.models.TrackStorage;
@@ -108,10 +111,11 @@ public class BottomSheetFragment extends Fragment {
             }
         });
 
-        TrackStorage.getInstance().getPlayer().setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-            @Override
-            public void onPrepared(MediaPlayer mp) {
+        v.setOnTouchListener(new View.OnTouchListener() {
 
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                return true;
             }
         });
 
@@ -129,6 +133,7 @@ public class BottomSheetFragment extends Fragment {
                 public void run() {
                     mAuthorNameTV.setText(track.getAuthorName());
                     mTitleTV.setText(track.getTitle());
+                    mCoverTrackIV.setImageDrawable(new BitmapDrawable(getResources(), GlobalTrackCoverCache.getInstance().get(track.getID())));
                     if(TrackStorage.getInstance().getPlayer().isPlaying())
                         mPlayButton.setImageResource(R.drawable.ic_pause_circle_outline_black);
                     else
