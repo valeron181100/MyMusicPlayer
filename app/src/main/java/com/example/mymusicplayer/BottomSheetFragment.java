@@ -8,6 +8,7 @@ import android.net.Uri;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
+import androidx.viewpager.widget.ViewPager;
 
 import android.os.Handler;
 import android.view.LayoutInflater;
@@ -22,6 +23,7 @@ import android.widget.TextView;
 import com.example.mymusicplayer.models.GlobalTrackCoverCache;
 import com.example.mymusicplayer.models.ObservableBoolean;
 import com.example.mymusicplayer.models.Track;
+import com.example.mymusicplayer.models.TrackPagerAdapter;
 import com.example.mymusicplayer.models.TrackStorage;
 
 import java.util.Timer;
@@ -39,7 +41,7 @@ public class BottomSheetFragment extends Fragment {
     private ImageButton mPlayButton;
     private ImageButton mPlayPrevButton;
     private ImageButton mPlayNextButton;
-    private ImageView mCoverTrackIV;
+    private ViewPager mCoverTrackVP;
 
     private TextView mTitleTV;
     private TextView mAuthorNameTV;
@@ -71,7 +73,32 @@ public class BottomSheetFragment extends Fragment {
         mPlayNextButton.setOnClickListener(playerConrolButtonsListener);
         mPlayPrevButton.setOnClickListener(playerConrolButtonsListener);
 
-        mCoverTrackIV = v.findViewById(R.id.trackCoverIV);
+        mCoverTrackVP = v.findViewById(R.id.trackCoverVP);
+        mCoverTrackVP.setAdapter(new TrackPagerAdapter(getContext()));
+//        mCoverTrackVP.setPageTransformer(true, new TrackPagerAdapter.ZoomOutPageTransformer());
+        int pagePadding = MainActivity.convertDpToPixels(20, getContext());
+        mCoverTrackVP.setClipToPadding(false);
+        mCoverTrackVP.setPadding(pagePadding * 2, 0, pagePadding * 2, 0);
+        mCoverTrackVP.setPageMargin(pagePadding);
+        mCoverTrackVP.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+            @Override
+            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+
+            }
+
+            @Override
+            public void onPageSelected(int position) {
+                TrackStorage trackStorage = TrackStorage.getInstance();
+                trackStorage.playSong(trackStorage.getTracks().get(position));
+            }
+
+            @Override
+            public void onPageScrollStateChanged(int state) {
+
+            }
+        });
+
+
 
         mHandler = new Handler();
         mScheduler = Executors.newScheduledThreadPool(1);
@@ -133,7 +160,7 @@ public class BottomSheetFragment extends Fragment {
                 public void run() {
                     mAuthorNameTV.setText(track.getAuthorName());
                     mTitleTV.setText(track.getTitle());
-                    mCoverTrackIV.setImageDrawable(new BitmapDrawable(getResources(), GlobalTrackCoverCache.getInstance().get(track.getID())));
+                    mCoverTrackVP.setCurrentItem(TrackStorage.getInstance().getTracks().indexOf(track), true);
                     if(TrackStorage.getInstance().getPlayer().isPlaying())
                         mPlayButton.setImageResource(R.drawable.ic_pause_circle_outline_black);
                     else

@@ -5,6 +5,8 @@ import android.media.MediaPlayer;
 import android.os.AsyncTask;
 import android.util.Log;
 
+import com.example.mymusicplayer.BottomSheetFragment;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.jsoup.Jsoup;
@@ -19,6 +21,7 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import androidx.annotation.Nullable;
@@ -41,6 +44,15 @@ public class TrackStorage {
         mIsPlayerPlaying = new ObservableBoolean(false);
 
         loadTracksAsync();
+
+        mPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+            @Override
+            public void onCompletion(MediaPlayer mp) {
+                int curIndex = mTracks.indexOf(getTrackById(mNowPlaying));
+                if(curIndex != mTracks.size() - 1)
+                    playSong(mTracks.get(curIndex + 1));
+            }
+        });
     }
 
     public ObservableBoolean getIsPlayerPlaying() {
@@ -177,6 +189,48 @@ public class TrackStorage {
         }
     }
 
+    public void playSong(final Track mTrack){
+        NetHelper.LoadHtmlAsyncTask loadHtmlAsyncTask = new NetHelper.LoadHtmlAsyncTask(mTrack.getLink());
+        loadHtmlAsyncTask.addOnLoadedHtmlListener(new NetHelper.LoadHtmlAsyncTask.OnLoadedHtmlListener() {
+            @Override
+            public void run(final String htmlStr) {
+                getPlayer().reset();
+                //mTrackStorage.setIsPlayerPlaying(false);
+                getPlayer().setAudioStreamType(AudioManager.STREAM_MUSIC);
+
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            String url = new JSONObject(htmlStr).getString("url");
+                            getPlayer().setDataSource(url);
+                            getPlayer().prepare();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+
+                        BottomSheetFragment.mScheduler.schedule(new Runnable() {
+                            @Override
+                            public void run() {
+                                int mCurrentPosition = TrackStorage.getInstance().getPlayer().getCurrentPosition() / 1000;
+                                BottomSheetFragment.mMusicSeekBar.setProgress(mCurrentPosition);
+                                BottomSheetFragment.mHandler.postDelayed(this, 1000);
+                            }
+                        }, 1000, TimeUnit.MILLISECONDS);
+
+                        getPlayer().start();
+                        setIsPlayerPlaying(true);
+                    }
+                }).start();
+                setNowPlaying(mTrack.getID());
+            }
+        });
+
+
+        loadHtmlAsyncTask.execute();
+    }
 
     public interface OnTracksDownloadedListener{
         void run(TrackStorage trackStorage);
@@ -188,7 +242,7 @@ public class TrackStorage {
         @Override
         protected ArrayList<Track> doInBackground(String... strings) {
             String rootUrlStr = "https://zaycev.net";
-            String urlStr = "https://zaycev.net/musicset/top100august2019.shtml";
+            String urlStr = "https://zaycev.net/musicset/music2000.shtml";
             ArrayList<Track> list = new ArrayList<>();
             try {
                 URL url = new URL(urlStr);
@@ -217,6 +271,7 @@ public class TrackStorage {
                     String title = split[1];
                     String authorName = titleAuthor.split(" ")[1];
                     String dataLink = rootUrlStr + element.attr("data-url");
+                    if(dataLink.equals(rootUrlStr)) continue;
                     String coverLink = null;
                     int size = element.childNodes().size();
                     if(size >= 4) {

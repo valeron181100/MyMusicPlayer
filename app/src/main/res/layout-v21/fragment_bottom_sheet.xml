@@ -7,18 +7,18 @@
     tools:context=".BottomSheetFragment">
 
 
-    <ImageView
-        android:id="@+id/trackCoverIV"
-        android:layout_width="300dp"
+
+
+    <androidx.viewpager.widget.ViewPager
+        android:id="@+id/trackCoverVP"
+        android:layout_width="match_parent"
         android:layout_height="300dp"
-        android:background="@color/DeepSkyBlue"
         android:elevation="10dp"
-        android:padding="16dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toTopOf="@id/trackTitleLayout"
-        app:srcCompat="@drawable/ic_musical_note" />
+        />
 
     <LinearLayout
         android:id="@+id/trackTitleLayout"
